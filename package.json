@@ -43,6 +43,7 @@
   },
   "devDependencies": {
     "@serverless-devs/core": "^0.0.*",
+    "@serverless-devs/dk-init": "^0.0.4-alpha.20",
     "@types/fs-extra": "^9.0.1",
     "@types/inquirer": "^7.3.0",
     "@types/jest": "^26.0.23",

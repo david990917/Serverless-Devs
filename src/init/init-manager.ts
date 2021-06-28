@@ -1,15 +1,12 @@
 /** @format */
 
 import path from 'path';
-import fs from 'fs-extra';
-import os from 'os';
 import _ from 'lodash';
-import { spawn } from 'child_process';
+import { spawn, spawnSync } from 'child_process';
 import * as inquirer from 'inquirer';
-import yaml from 'js-yaml';
-import { loadApplication, setCredential } from '@serverless-devs/core';
+import { loadApplication } from '@serverless-devs/core';
 import colors from 'chalk';
-import { logger, configSet, getYamlPath, common } from '../utils';
+import { logger, configSet, common } from '../utils';
 import { DEFAULT_REGIRSTRY } from '../constants/static-variable';
 import {
   APPLICATION_TEMPLATE,
@@ -19,94 +16,14 @@ import {
   AWS_APPLICATION_TEMPLATE,
 } from './init-config';
 import size from 'window-size';
-inquirer.registerPrompt('autocomplete', require('inquirer-autocomplete-prompt'));
-const { replaceTemplate, getTemplatekey, replaceFun } = common;
-const getCredentialAliasList = () => {
-  const ACCESS_PATH = getYamlPath(path.join(os.homedir(), '.s'), 'access');
-  if (!ACCESS_PATH) {
-    return [];
-  }
+const dkInit = require('@serverless-devs/dk-init');
 
-  try {
-    const result = yaml.load(fs.readFileSync(ACCESS_PATH, 'utf8'));
-    return Object.keys(result);
-  } catch (error) {
-    return [];
-  }
-};
+inquirer.registerPrompt('autocomplete', require('inquirer-autocomplete-prompt'));
+const { replaceTemplate } = common;
 
 export class InitManager {
   protected promps: any = {};
   constructor() {}
-
-  async initSconfig(appPath: string) {
-    const sPath = getYamlPath(appPath, 's');
-    if (sPath) {
-      let sContent = fs.readFileSync(sPath, 'utf-8');
-      const templateKeys = getTemplatekey(sContent);
-      templateKeys.forEach(item => {
-        const { name, desc } = item;
-        if (name === 'access') {
-          const credentialAliasList = getCredentialAliasList();
-          if (Array.isArray(credentialAliasList) && credentialAliasList.length > 0) {
-            this.promps['access'] = {
-              type: 'list',
-              name: 'access',
-              message: 'please select credential alias',
-              choices: credentialAliasList,
-            };
-          } else {
-            this.promps['access'] = {
-              type: 'confirm',
-              name: 'access',
-              message: 'create credential?',
-              default: true,
-            };
-          }
-        } else {
-          this.promps[name] = {
-            type: 'input',
-            message: `please input ${desc || name}:`,
-            name,
-          };
-        }
-      });
-
-      const { access: prompsAccess, ...prompsRest } = this.promps;
-      const prompsOption = _.concat(_.values(prompsRest), prompsAccess);
-
-      const result = await inquirer.prompt(_.filter(prompsOption, item => item));
-      if (result.access === true) {
-        const credential = await setCredential();
-        result.access = credential.Alias;
-      } else {
-        result.access = typeof result.access === 'string' ? result.access : 'default';
-      }
-      sContent = replaceFun(sContent, result);
-      fs.writeFileSync(sPath, sContent, 'utf-8');
-    }
-    return sPath;
-  }
-
-  async initEnvConfig(appPath: string) {
-    const envExampleFilePath = path.resolve(appPath, '.env.example');
-    if (!fs.existsSync(envExampleFilePath)) return;
-    const envConfig = fs.readFileSync(envExampleFilePath, 'utf-8');
-    const templateKeys = getTemplatekey(envConfig);
-    if (templateKeys.length === 0) return;
-    const promptOption = templateKeys.map(item => {
-      const { name, desc } = item;
-      return {
-        type: 'input',
-        message: `please input ${desc || name}:`,
-        name,
-      };
-    });
-    const result = await inquirer.prompt(promptOption);
-    const newEnvConfig = replaceFun(envConfig, result);
-    fs.unlink(envExampleFilePath);
-    fs.writeFileSync(path.resolve(appPath, '.env'), newEnvConfig, 'utf-8');
-  }
 
   async assemblySpecialApp(appName, { projectName, appPath }) {
     if (appName === 'start-component' || appName === 'devsapp/start-component') {
@@ -119,18 +36,21 @@ export class InitManager {
     const projectName = dir || (await inquirer.prompt(PROJECT_NAME_INPUT)).projectName || './';
     const registry = downloadurl ? downloadurl : configSet.getConfig('registry') || DEFAULT_REGIRSTRY;
     let appPath = await loadApplication({ registry, target: './', source: name, name: projectName });
+
     if (appPath) {
-      await this.initSconfig(appPath);
-      await this.initEnvConfig(appPath);
+      spawnSync(`node ${dkInit}`, {
+        cwd: appPath,
+        shell: true,
+      });
       await this.assemblySpecialApp(name, { projectName, appPath }); // Set some app template content
       // postInit
-      try{
-        if(process.env[`${appPath}-post-init`]){
-          const tempObj = JSON.parse(process.env[`${appPath}-post-init`])
+      try {
+        if (process.env[`${appPath}-post-init`]) {
+          const tempObj = JSON.parse(process.env[`${appPath}-post-init`]);
           const baseChildComponent = await require(path.join(tempObj['tempPath'], 'hook'));
-          await baseChildComponent.postInit(tempObj)
+          await baseChildComponent.postInit(tempObj);
         }
-      }catch (e){}
+      } catch (e) {}
       logger.success('\n🏄‍ Thanks for using Serverless-Devs');
       console.log(`👉 You could [cd ${appPath}] and enjoy your serverless journey!`);
       console.log(`🧭 If you need help for this example, you can use [s -h] after you enter folder.`);
