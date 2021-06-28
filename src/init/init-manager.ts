@@ -41,6 +41,7 @@ export class InitManager {
       spawnSync(`node ${dkInit}`, {
         cwd: appPath,
         shell: true,
+        stdio: 'inherit',
       });
       await this.assemblySpecialApp(name, { projectName, appPath }); // Set some app template content
       // postInit
