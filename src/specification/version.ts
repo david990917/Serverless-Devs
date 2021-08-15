@@ -30,7 +30,7 @@ export function getServiceConfigDetail(configData: any) {
   return { name, provider, access, autoCredential };
 }
 
-export function getServiceInputs(configData: any, version: string, options: any) {
+export function getServiceInputs(configData: any, version: string, options: any) { // 这个没测试
   if (version === '0.0.1') {
     const { Properties, Params, Provider, Access, Component, ProjectName } = configData;
     const { credentials, method } = options;
