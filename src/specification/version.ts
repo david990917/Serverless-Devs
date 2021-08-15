@@ -1,9 +1,9 @@
 /** @format */
 
 export function getSubcommand(configData: any): string[] {
-  const edition = configData.edition || '0.0.1';
+  const edition = configData.edition || '0.0.1'; /** 获取版本*/
   if (edition === '0.0.1') {
-    return Object.keys(configData).filter(key => key !== 'Global');
+    return Object.keys(configData).filter(key => key !== 'Global');/** */
   }
   const commands = configData.services || {};
   return Object.keys(commands);
