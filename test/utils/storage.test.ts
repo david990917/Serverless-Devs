@@ -9,6 +9,7 @@ describe('module storage', () => {
     const v = fs.existsSync(`${os.homedir()}/.s`);
     expect(v).toBeTruthy();
   });
+  
   it('test getHistoryFile methods', () => {
     const path = getHistoryFile();
     expect(path).toContain('history');
