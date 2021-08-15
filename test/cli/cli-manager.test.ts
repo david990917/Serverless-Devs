@@ -10,6 +10,7 @@ describe('init cli', () => {
       access: 'string',
       props: 'string',
     };
+    
     class myClass extends CliManager {
       public values: any;
       constructor(data) {
@@ -20,6 +21,7 @@ describe('init cli', () => {
     const v = new myClass(input);
     expect(v.values).toEqual(input)
   });
+
 
   it('test component inner inputs', async () => {
     try {
@@ -41,6 +43,8 @@ describe('init cli', () => {
       expect(e).toMatch('error');
     }
   });
+
+
   it('test params as input', async () => {
     try {
       const input: CliParams = {
@@ -61,4 +65,5 @@ describe('init cli', () => {
       expect(e).toMatch('error');
     }
   });
+
 });
