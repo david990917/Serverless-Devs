@@ -5,7 +5,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import yaml from 'js-yaml';
 import storage from './storage';
-interface ProfileParams {
+export interface ProfileParams {
   data?: any;
   configKey?: string;
   read?: boolean;

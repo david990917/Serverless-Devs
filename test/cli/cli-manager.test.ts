@@ -20,8 +20,13 @@ describe('init cli', () => {
     }
     const v = new myClass(input);
     expect(v.values).toEqual(input)
-  });
 
+    const commands="s init";
+    const commandsLength=8;
+
+    const result=v.getTempCommandStr(commands,commandsLength);
+    expect(result).toEqual("s init   : ")
+  });
 
   it('test component inner inputs', async () => {
     try {
@@ -42,6 +47,7 @@ describe('init cli', () => {
     } catch (e) {
       expect(e).toMatch('error');
     }
+
   });
 
 
